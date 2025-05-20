@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import api from '@/app/axios';
+import { useEffect, useState } from "react";
+import api from "@/app/axios";
 
 type PriceRow = {
   height: number;
@@ -16,8 +16,8 @@ type PriceGrid = {
 
 export default function PriceGridPage() {
   const [grid, setGrid] = useState<PriceGrid | null>(null);
-  const [newHeight, setNewHeight] = useState<number | ''>('');
-  const [newWidth, setNewWidth] = useState<number | ''>('');
+  const [newHeight, setNewHeight] = useState<number | "">("");
+  const [newWidth, setNewWidth] = useState<number | "">("");
   const [newPricesForRow, setNewPricesForRow] = useState<number[]>([]);
   const [newPricesForCol, setNewPricesForCol] = useState<number[]>([]);
 
@@ -26,15 +26,15 @@ export default function PriceGridPage() {
   }, []);
 
   const fetchGrid = async () => {
-    const res = await api.get('/prices');
+    const res = await api.get("/prices");
     setGrid(res.data);
   };
 
   const handleAddRow = async () => {
-    if (newHeight === '' || !grid) return;
+    if (newHeight === "" || !grid) return;
 
     const promises = grid.widths.map((width, idx) =>
-      api.post('/prices', {
+      api.post("/prices", {
         width,
         height: newHeight,
         price: newPricesForRow[idx] || 0,
@@ -42,16 +42,16 @@ export default function PriceGridPage() {
     );
 
     await Promise.all(promises);
-    setNewHeight('');
+    setNewHeight("");
     setNewPricesForRow([]);
     fetchGrid();
   };
 
   const handleAddCol = async () => {
-    if (newWidth === '' || !grid) return;
+    if (newWidth === "" || !grid) return;
 
     const promises = grid.heights.map((height, idx) =>
-      api.post('/prices', {
+      api.post("/prices", {
         width: newWidth,
         height,
         price: newPricesForCol[idx] || 0,
@@ -59,9 +59,21 @@ export default function PriceGridPage() {
     );
 
     await Promise.all(promises);
-    setNewWidth('');
+    setNewWidth("");
     setNewPricesForCol([]);
     fetchGrid();
+  };
+
+  const borderColumn = (index: number, type: string) => {
+    if (index % 2 === 0 && type === "height") {
+      return "border-r border-r-gray-400 bg-white p-2 font-bold text-black";
+    } else if (type === "height") {
+      return "border-r border-r-gray-400 bg-blue-100 p-2 font-bold text-black";
+    } else if (index % 2 === 0 && type === "price") {
+      return "bg-white p-2 font-medium";
+    } else if (type === "price") {
+      return "bg-blue-100 p-2 font-medium";
+    }
   };
 
   if (!grid) return <div className="p-4">Loading...</div>;
@@ -69,25 +81,42 @@ export default function PriceGridPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Price Grid</h1>
-
       <div className="overflow-auto">
-        <table className="min-w-max table-auto border-collapse border border-gray-300">
+        <table className="min-w-max table-auto border-collapse">
           <thead>
             <tr>
-              <th className="border border-gray-300 p-2">Height \ Width</th>
+              <th
+                colSpan={2}
+                className="border-b border-b-gray-400 p-2 bg-blue-100"
+              >
+                WIDTH TO
+              </th>
               {grid.widths.map((w) => (
-                <th key={w} className="border border-gray-300 p-2">
+                <th
+                  key={w}
+                  className="border-b border-b-gray-400 p-2 bg-blue-100"
+                >
                   {w}"
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {grid.prices.map((row) => (
+            {grid.prices.map((row, idx) => (
               <tr key={row.height}>
-                <td className="border border-gray-300 p-2 font-medium">{row.height}"</td>
+                {idx === 0 && (
+                  <td
+                    rowSpan={grid.prices.length}
+                    className="text-center bg-blue-100 font-medium"
+                  >
+                    <div className="transform -rotate-90 whitespace-nowrap font-bold text-black">
+                      HEIGHT TO
+                    </div>
+                  </td>
+                )}
+                <td className={borderColumn(idx, "height")}>{row.height}"</td>
                 {row.values.map((price, i) => (
-                  <td key={i} className="border border-gray-300 p-2 text-center">
+                  <td key={i} className={borderColumn(idx, "price")}>
                     ${price}
                   </td>
                 ))}
@@ -113,7 +142,7 @@ export default function PriceGridPage() {
               key={w}
               type="number"
               placeholder={`Price for ${w}"`}
-              value={newPricesForRow[idx] || ''}
+              value={newPricesForRow[idx] || ""}
               onChange={(e) => {
                 const updated = [...newPricesForRow];
                 updated[idx] = Number(e.target.value);
@@ -147,7 +176,7 @@ export default function PriceGridPage() {
               key={h}
               type="number"
               placeholder={`Price for ${h}"`}
-              value={newPricesForCol[idx] || ''}
+              value={newPricesForCol[idx] || ""}
               onChange={(e) => {
                 const updated = [...newPricesForCol];
                 updated[idx] = Number(e.target.value);
